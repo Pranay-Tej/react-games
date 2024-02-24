@@ -1,90 +1,60 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Board from "./Board";
 
-const grid = [
-  [1, 2],
-  [1, 2],
-];
+function MemoryGame() {
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [gridSize, setGridSize] = useState(4);
 
-function MemoryGameBoard() {
-  const firstActiveElement = useRef<HTMLDivElement | null>(null);
-  const secondActiveElement = useRef<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const timerRef = useRef<any>(null);
-  const clearedCells = useRef(new Set<string>());
-  const [isGameOver, setIsGameOver] = useState(false);
+  //   const handleIncrease = () => {
+  //     setGridSize((prev) => prev + 2);
+  //   };
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
-  const handleCellClick: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    // console.log('before', clearedCells.current);
-    if (firstActiveElement.current && secondActiveElement.current) {
-      return;
-    }
-    const elem = event.currentTarget;
-    const cellId = elem.getAttribute("id");
-    if (cellId && clearedCells.current.has(cellId)) {
-      return;
-    }
-    // console.log(elem);
-
-    elem.classList.add("active");
-
-    if (!firstActiveElement.current) {
-      firstActiveElement.current = elem;
-    } else {
-      const firstElem = firstActiveElement.current;
-      secondActiveElement.current = elem;
-      if (firstElem.innerText !== elem.innerText) {
-        timerRef.current = setTimeout(() => {
-          firstElem.classList.remove("active");
-          elem.classList.remove("active");
-          firstActiveElement.current = null;
-          secondActiveElement.current = null;
-        }, 1000);
-      } else {
-        const firstCellId = firstActiveElement.current?.getAttribute("id");
-
-        firstCellId && clearedCells.current.add(firstCellId);
-        cellId && clearedCells.current.add(cellId);
-
-        firstActiveElement.current = null;
-        secondActiveElement.current = null;
-      }
-    }
-
-    if (clearedCells.current.size === grid.length * grid[0].length) {
-      setIsGameOver(true);
-    }
-    // console.log('after', clearedCells.current);
-  };
+  //   const handleDecrease = () => {
+  //     setGridSize((prev) => prev - 2);
+  //   };
 
   return (
-    <div>
-      {grid.map((row, rowIndex) => (
-        <div key={rowIndex} className="gridRow">
-          {row.map((element, colIndex) => (
-            <div
-              id={`${rowIndex}-${colIndex}`}
-              key={`${rowIndex}-${colIndex}`}
-              className="cell"
-              onClick={handleCellClick}
-            >
-              <div className="back"></div>
-              <div className="front">{element}</div>
-            </div>
-          ))}
-        </div>
-      ))}
+    <>
+      <h3 style={{ textAlign: "center" }}>Memory Game</h3>
 
-      {isGameOver && <p>Victory!</p>}
-    </div>
+      {isGameStarted ? (
+        <Board gridSize={gridSize} setIsGameStarted={setIsGameStarted} />
+      ) : (
+        <div className="gameSettings">
+          <div className="difficultyLevel">
+            <button
+              className={gridSize === 2 ? "active" : ""}
+              onClick={() => setGridSize(2)}
+            >
+              Easy (<span>{`${2} * ${2}`}</span>)
+            </button>
+            <button
+              className={gridSize === 4 ? "active" : ""}
+              onClick={() => setGridSize(4)}
+            >
+              Medium (<span>{`${4} * ${4}`}</span>)
+            </button>
+            <button
+              className={gridSize === 6 ? "active" : ""}
+              onClick={() => setGridSize(6)}
+            >
+              Hard (<span>{`${6} * ${6}`}</span>)
+            </button>
+          </div>
+          {/* <button onClick={handleDecrease} disabled={gridSize === 2}>
+            // ➖ //{" "}
+          </button>
+          <button onClick={handleIncrease} disabled={gridSize === 6}>
+            // ➕ //{" "}
+          </button> */}
+          <br />
+          <button className="start" onClick={() => setIsGameStarted(true)}>
+            Start Game
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
-export default MemoryGameBoard;
+export default MemoryGame;
