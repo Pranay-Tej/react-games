@@ -1,0 +1,48 @@
+.gridRow {
+  display: flex;
+  perspective: 350px;
+}
+
+.cell {
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+  margin: 2px;
+  
+  transform: rotateY(180deg);
+  transform-style: preserve-3d;
+  position: relative;
+  
+  transition: all 0.6s;
+  
+  user-select: none;
+}
+
+.cell .front,
+.back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  backface-visibility: hidden;
+}
+
+.cell .back {
+  background-color: grey;
+  transform: rotateY(180deg);
+}
+
+.cell .front {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: wheat;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.cell.active {
+  /* background-color: blue; */
+  transform: unset;
+}
