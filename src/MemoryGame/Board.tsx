@@ -5,12 +5,14 @@ type BoardProps = {
   setIsGameStarted: (val: boolean) => void;
 };
 
+const getFrontDiv = (element: HTMLDivElement) => {
+  return element.querySelector<HTMLDivElement>(".front");
+};
+
 function Board(props: BoardProps) {
   const { gridSize } = props;
 
   const [grid, setGrid] = useState<number[][]>([]);
-  const firstActiveElement = useRef<HTMLDivElement | null>(null);
-  const secondActiveElement = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const timerRef = useRef<any>(null);
   const clearedCells = useRef(new Set<string>());
@@ -53,52 +55,92 @@ function Board(props: BoardProps) {
   }, []);
 
   const handleCellClick: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    console.log("before", clearedCells.current);
-    if (firstActiveElement.current && secondActiveElement.current) {
+    // console.log("before", clearedCells.current);
+    const activeCardsBeforeClick =
+      document.querySelectorAll<HTMLDivElement>(".active");
+
+    // console.log(activeCardsBeforeClick);
+
+    if (activeCardsBeforeClick.length === 2) {
       return;
     }
-    const elem = event.currentTarget;
-    const cellId = elem.getAttribute("id");
-    if (cellId && clearedCells.current.has(cellId)) {
+
+    const currentElement = event.currentTarget;
+    const cellId = currentElement.getAttribute("id");
+    if (!cellId) {
       return;
     }
-    // console.log(elem);
+    if (clearedCells.current.has(cellId)) {
+      return;
+    }
 
-    elem.classList.add("active");
+    // add the textContent only when clicking
+    // so user can't inspect hidden card value in the dev tools
+    const [i, j] = cellId.split("-");
+    const currentElementFrontDiv = getFrontDiv(currentElement);
+    if (currentElementFrontDiv) {
+      currentElementFrontDiv.innerText = String(grid[Number(i)][Number(j)]);
+    }
 
-    if (!firstActiveElement.current) {
-      firstActiveElement.current = elem;
-      firstActiveElement.current.classList.add("firstElement");
-    } else {
-      secondActiveElement.current = elem;
-      console.log(firstActiveElement.current);
-      console.log(secondActiveElement.current);
+    currentElement.classList.add("active");
 
-      if (firstActiveElement.current?.innerText !== elem.innerText) {
-        timerRef.current = setTimeout(() => {
-          firstActiveElement.current?.classList.remove("active");
-          secondActiveElement.current?.classList.remove("active");
-          firstActiveElement.current?.classList.remove("firstElement");
-          firstActiveElement.current = null;
-          secondActiveElement.current = null;
-        }, 600);
-      } else {
-        const firstCellId = firstActiveElement.current?.getAttribute("id");
+    if (activeCardsBeforeClick.length === 0) {
+      currentElement.classList.add("firstElement");
+      return;
+    }
 
-        firstCellId && clearedCells.current.add(firstCellId);
-        cellId && clearedCells.current.add(cellId);
+    // actiCards.length === 1
+    const firstCard = activeCardsBeforeClick[0];
+    const secondCard = currentElement;
 
-        firstActiveElement.current?.classList.remove("firstElement");
+    const firstCardId = firstCard.getAttribute("id");
+    const secondCardId = secondCard.getAttribute("id");
 
-        firstActiveElement.current = null;
-        secondActiveElement.current = null;
+    // check if clicking on the same card again
+    if (firstCardId === secondCardId) {
+      return;
+    }
+
+    const firstCardValue = getFrontDiv(firstCard)?.innerText;
+    const secondCardValue = getFrontDiv(secondCard)?.innerText;
+    // console.log({
+    //   firstCard,
+    //   secondCard,
+    //   firstCardValue,
+    //   secondCardValue,
+    // });
+
+    // equal case
+    if (
+      firstCardValue &&
+      secondCardValue &&
+      firstCardValue === secondCardValue
+    ) {
+      firstCard.classList.add("clear");
+      secondCard.classList.add("clear");
+      if (firstCardId) {
+        clearedCells.current.add(firstCardId);
+      }
+      if (secondCardId) {
+        clearedCells.current.add(secondCardId);
+      }
+      if (clearedCells.current.size === gridSize * gridSize) {
+        setIsGameOver(true);
       }
     }
 
-    if (clearedCells.current.size === grid.length * grid[0].length) {
-      setIsGameOver(true);
-    }
-    console.log("after", clearedCells.current);
+    // runs in both equal and non equal cases
+    timerRef.current = setTimeout(() => {
+      const activeCards = document.querySelectorAll<HTMLDivElement>(".active");
+      activeCards.forEach((card) => {
+        card.classList.remove("active");
+        card.classList.remove("firstElement");
+        const cardFrontDiv = getFrontDiv(card);
+        if (cardFrontDiv && !card.classList.contains("clear")) {
+          cardFrontDiv.innerText = "";
+        }
+      });
+    }, 600);
   };
 
   return (
@@ -107,7 +149,7 @@ function Board(props: BoardProps) {
         <div className="board">
           {grid.map((row, rowIndex) => (
             <div key={rowIndex} className="gridRow">
-              {row.map((element, colIndex) => (
+              {row.map((_, colIndex) => (
                 <div
                   id={`${rowIndex}-${colIndex}`}
                   key={`${rowIndex}-${colIndex}`}
@@ -115,7 +157,7 @@ function Board(props: BoardProps) {
                   onClick={handleCellClick}
                 >
                   <div className="back"></div>
-                  <div className="front">{element}</div>
+                  <div className="front"></div>
                 </div>
               ))}
             </div>

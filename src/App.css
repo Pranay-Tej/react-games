@@ -56,8 +56,7 @@
   color: hsl(0, 0%, 10%);
 }
 
-.cell.active {
-  /* background-color: blue; */
+.cell.active,.clear {
   transform: unset;
 }
 
